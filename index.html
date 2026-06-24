@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Shield // SOC Matrix</title>
+    <title>AI-Dash // SOC Matrix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -21,7 +21,6 @@
         .log-scroll-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .dark .log-scroll-container::-webkit-scrollbar-thumb { background: #1e293b; }
         .selected-row { background-color: rgba(8, 145, 178, 0.08) !important; border-left: 4px solid #0891b2 !important; }
-        #filter-menu.active { display: block; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 min-h-screen font-sans flex flex-col overflow-hidden">
@@ -32,20 +31,20 @@
                 <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
             <div class="hidden sm:block">
-                <h1 class="text-xs font-bold tracking-tight text-slate-900 dark:text-white uppercase">AI Shield</h1>
-                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">Matrix v2.5</p>
+                <!-- Updated Brand Name -->
+                <h1 class="text-xs font-black tracking-tighter text-slate-900 dark:text-white uppercase">AI-Dash</h1>
+                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">SOC Matrix v2.5</p>
             </div>
         </div>
 
-        <!-- Search & Stats Container -->
+        <!-- Search & Stats -->
         <div class="flex-1 max-w-2xl mx-6 flex items-center space-x-4">
             <div class="relative flex-1">
                 <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="search-input" oninput="runGlobalFilter()" placeholder="Search logs..." 
+                <input type="text" id="search-input" oninput="runGlobalFilter()" placeholder="Search telemetry..." 
                     class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-1.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
             </div>
             
-            <!-- Stats Block (Восстановлен) -->
             <div class="hidden lg:flex items-center space-x-4 border-l border-slate-200 dark:border-slate-800 pl-4">
                 <div class="flex flex-col"><span class="text-[8px] uppercase text-slate-400 font-bold">Total</span><span id="stat-total" class="text-[10px] font-mono font-bold">0</span></div>
                 <div class="flex flex-col"><span class="text-[8px] uppercase text-emerald-500 font-bold">Safe</span><span id="stat-safe" class="text-[10px] font-mono font-bold">0</span></div>
@@ -69,10 +68,10 @@
         <section id="log-container" class="flex-1 flex flex-col border-r border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950">
             <div class="px-6 py-2 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Telemetry</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Stream</span>
                     <div id="pause-indicator" class="hidden flex items-center space-x-1 text-amber-500">
                         <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span>
-                        <span class="text-[9px] font-bold uppercase">Stream Paused</span>
+                        <span class="text-[9px] font-bold uppercase">Buffering...</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -83,8 +82,8 @@
 
             <div id="stream-target" class="log-scroll-container">
                 <div id="empty-state" class="flex flex-col items-center justify-center h-full py-20 opacity-20">
-                    <i data-lucide="refresh-cw" class="w-8 h-8 mb-2 animate-spin"></i>
-                    <p class="text-[10px] font-bold uppercase tracking-widest">Awaiting Data...</p>
+                    <i data-lucide="refresh-cw" class="w-8 h-8 mb-2 animate-spin text-cyan-500"></i>
+                    <p class="text-[10px] font-bold uppercase tracking-widest">Awaiting AI-Dash Feed...</p>
                 </div>
             </div>
         </section>
@@ -92,7 +91,7 @@
         <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden transition-all duration-300 bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl flex flex-col">
             <div class="p-6 space-y-6 flex-1 overflow-y-auto">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Event Analysis</h2>
+                    <h2 class="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Forensic Analysis</h2>
                     <button onclick="closePanel()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
                 <div id="detail-content" class="space-y-6">
@@ -158,7 +157,7 @@
             const statusDot = document.getElementById('conn-dot');
 
             ws.onopen = () => {
-                statusText.innerText = "Socket Live";
+                statusText.innerText = "Dash Live";
                 statusText.className = "text-[10px] font-mono font-bold text-cyan-500 uppercase";
                 statusDot.className = "h-2 w-2 rounded-full bg-cyan-500 animate-pulse";
             };
@@ -228,7 +227,7 @@
 
             const container = document.getElementById('stream-target');
             container.insertBefore(row, container.firstChild);
-            runGlobalFilter(); // Применяем текущий поиск к новому элементу
+            runGlobalFilter();
 
             if (container.children.length > 100) container.lastChild.remove();
         }
@@ -255,11 +254,11 @@
 
         async function executeMitigation() {
             const service = document.getElementById('det-service').innerText;
-            if (!confirm(`Execute mitigation for ${service}?`)) return;
+            if (!confirm(`Execute AI-Dash protocol for ${service}?`)) return;
             const btn = document.getElementById('execute-btn');
             btn.disabled = true; btn.innerText = "EXECUTING...";
             await new Promise(r => setTimeout(r, 800));
-            alert("Protocol executed.");
+            alert("Mitigation successful.");
             btn.disabled = false; btn.innerText = "Execute Mitigation";
             closePanel();
         }
@@ -279,7 +278,7 @@
             document.getElementById('det-proto').innerText = data.event.protocol_type;
             document.getElementById('det-flag').innerText = data.event.flag;
             document.getElementById('det-bytes').innerText = `${data.event.src_bytes} Bytes`;
-            document.getElementById('det-reason').innerText = "Analyzing heuristics...";
+            document.getElementById('det-reason').innerText = "Running AI-Dash heuristics...";
 
             try {
                 const resp = await fetch('/api/v1/explain', {
