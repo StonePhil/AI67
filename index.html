@@ -7,140 +7,171 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Fix for scrollable area - Ensures it stays within the screen */
+        /* Улучшенная типографика и плавность */
+        body {
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            -webkit-font-smoothing: antialiased;
+        }
+
         .log-scroll-container {
             height: calc(100vh - 110px);
             overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
-        .log-scroll-container::-webkit-scrollbar { width: 4px; }
-        .log-scroll-container::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        
+        /* Тонкий современный скроллбар */
+        .log-scroll-container::-webkit-scrollbar { width: 6px; }
+        .log-scroll-container::-webkit-scrollbar-track { background: transparent; }
+        .log-scroll-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .log-scroll-container::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
-        .selected-row { background-color: rgba(6, 182, 212, 0.1) !important; border-left: 3px solid #06b6d4 !important; }
-        .panel-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .selected-row { 
+            background-color: #f8fafc !important; 
+            border-left: 4px solid #0891b2 !important; 
+            box-shadow: inset 2px 0 8px rgba(0,0,0,0.02);
+        }
+        
+        .panel-transition { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* Filter Menu Styling */
         #filter-menu { display: none; }
         #filter-menu.active { display: block; }
+
+        /* Софт-бордеры и тени для light mode */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-300 min-h-screen font-sans flex flex-col overflow-hidden">
+<body class="bg-slate-50 text-slate-700 min-h-screen font-sans flex flex-col overflow-hidden">
 
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-6 py-3 flex items-center justify-between relative">
+    <header class="border-b border-slate-200/60 glass-panel px-8 py-4 flex items-center justify-between relative z-10 shadow-sm">
         <div class="flex items-center space-x-4">
-            <div class="text-cyan-500"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+            <div class="text-cyan-600 bg-cyan-50 p-2 rounded-lg">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
             <div>
-                <h1 class="text-sm font-bold tracking-tighter text-white uppercase">AI Shield</h1>
-                <p class="text-[10px] text-slate-500 font-mono">SOC Matrix v2.5</p>
+                <h1 class="text-sm font-bold tracking-tight text-slate-900 uppercase">AI Shield</h1>
+                <p class="text-[10px] text-slate-400 font-mono font-medium uppercase tracking-wider">Security Operations Center v2.5</p>
             </div>
         </div>
 
         <!-- Global Stats -->
-        <div class="hidden md:flex items-center space-x-6">
-            <div class="flex flex-col items-center">
-                <span class="text-[9px] uppercase text-slate-500 font-bold">Total</span>
-                <span id="stat-total" class="text-xs font-mono text-white">0</span>
+        <div class="hidden md:flex items-center space-x-10">
+            <div class="flex flex-col">
+                <span class="text-[9px] uppercase text-slate-400 font-bold tracking-widest">System Load</span>
+                <span id="stat-total" class="text-sm font-mono font-bold text-slate-900 italic">0</span>
             </div>
-            <div class="flex space-x-4 border-l border-slate-800 pl-6">
-                <div class="flex flex-col items-center"><span class="text-[9px] text-emerald-500 font-bold">L0-1</span><span id="stat-safe" class="text-xs font-mono">0</span></div>
-                <div class="flex flex-col items-center"><span class="text-[9px] text-amber-500 font-bold">L2-3</span><span id="stat-warn" class="text-xs font-mono">0</span></div>
-                <div class="flex flex-col items-center"><span class="text-[9px] text-red-500 font-bold">L4-5</span><span id="stat-crit" class="text-xs font-mono">0</span></div>
+            <div class="flex space-x-8 border-l border-slate-200 pl-8">
+                <div class="flex flex-col"><span class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest">Normal</span><span id="stat-safe" class="text-sm font-mono font-semibold text-slate-700">0</span></div>
+                <div class="flex flex-col"><span class="text-[9px] text-amber-600 font-bold uppercase tracking-widest">Elevated</span><span id="stat-warn" class="text-sm font-mono font-semibold text-slate-700">0</span></div>
+                <div class="flex flex-col"><span class="text-[9px] text-red-600 font-bold uppercase tracking-widest">Critical</span><span id="stat-crit" class="text-sm font-mono font-semibold text-slate-700">0</span></div>
             </div>
         </div>
 
-        <!-- Filter Button -->
         <div class="flex items-center space-x-3">
-            <button id="filter-btn" onclick="toggleFilterMenu(event)" class="flex items-center space-x-2 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded text-[10px] font-bold uppercase hover:bg-slate-800 transition-colors">
-                <i data-lucide="filter" class="w-3 h-3"></i>
-                <span>Filter Logs</span>
+            <button id="filter-btn" onclick="toggleFilterMenu(event)" class="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-[10px] font-bold uppercase text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                <span>Filter Streams</span>
             </button>
         </div>
 
-        <!-- Filter Dropdown Menu -->
-        <div id="filter-menu" class="absolute top-14 right-6 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-4 w-48 z-50">
-            <h3 class="text-[10px] uppercase font-bold text-slate-500 mb-3 border-b border-slate-800 pb-2">Threat Levels</h3>
-            <div class="space-y-2">
-                <!-- Checkboxes -->
+        <!-- Filter Dropdown -->
+        <div id="filter-menu" class="absolute top-16 right-8 bg-white border border-slate-200 rounded-xl shadow-xl p-5 w-56 z-50">
+            <h3 class="text-[10px] uppercase font-bold text-slate-400 mb-4 border-b border-slate-50 pb-2 tracking-widest">Threat Threshold</h3>
+            <div class="space-y-3">
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="0" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 0 (Safe)</span>
+                    <input type="checkbox" value="0" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900">Level 0 (Safe)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="1" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 1 (Info)</span>
+                    <input type="checkbox" value="1" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900">Level 1 (Info)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="2" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 2 (Warn)</span>
+                    <input type="checkbox" value="2" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900 text-blue-600">Level 2 (Warning)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="3" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 3 (Alert)</span>
+                    <input type="checkbox" value="3" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900 text-amber-600">Level 3 (Alert)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="4" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 4 (High)</span>
+                    <input type="checkbox" value="4" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900 text-orange-600">Level 4 (High)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="5" class="filter-checkbox w-3 h-3 rounded border-slate-700 bg-slate-950 text-cyan-500">
-                    <span class="text-xs text-slate-400 group-hover:text-white">Level 5 (Crit)</span>
+                    <input type="checkbox" value="5" class="filter-checkbox w-4 h-4 rounded border-slate-300 text-cyan-600">
+                    <span class="text-xs font-medium text-slate-600 group-hover:text-slate-900 text-red-600">Level 5 (Critical)</span>
                 </label>
             </div>
-            <button onclick="clearFilters()" class="mt-4 w-full text-[9px] uppercase font-bold text-cyan-500 hover:text-cyan-400 text-left">Clear All</button>
+            <button onclick="clearFilters()" class="mt-5 w-full text-[10px] uppercase font-bold text-cyan-600 hover:text-cyan-700 text-center border-t border-slate-100 pt-3 transition-colors">Reset All Filters</button>
         </div>
     </header>
 
     <main class="flex flex-1 overflow-hidden">
-        <section id="log-container" class="flex-1 flex flex-col border-r border-slate-800 bg-slate-950">
-            <div class="px-6 py-2 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
-                <span class="text-[9px] font-mono uppercase tracking-widest text-slate-500">Real-Time Ingestion Buffer</span>
-                <span id="conn-status" class="text-[9px] font-mono text-cyan-500 animate-pulse">Socket Live</span>
+        <section id="log-container" class="flex-1 flex flex-col border-r border-slate-200/60 bg-white">
+            <div class="px-8 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Live Telemetry Ingestion</span>
+                <div class="flex items-center space-x-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                    </span>
+                    <span id="conn-status" class="text-[10px] font-mono font-bold text-cyan-600 uppercase">Socket Active</span>
+                </div>
             </div>
 
             <div id="stream-target" class="log-scroll-container">
-                <div id="empty-state" class="flex flex-col items-center justify-center h-full opacity-20 py-20">
-                    <i data-lucide="database" class="w-12 h-12 mb-2"></i>
-                    <p class="text-xs font-mono uppercase">Awaiting Data Stream...</p>
+                <div id="empty-state" class="flex flex-col items-center justify-center h-full py-20">
+                    <div class="bg-slate-50 p-6 rounded-full mb-4">
+                        <i data-lucide="database" class="w-8 h-8 text-slate-300"></i>
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Waiting for incoming packets...</p>
                 </div>
             </div>
         </section>
 
-        <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden panel-transition bg-slate-900/40 backdrop-blur-xl flex flex-col border-l border-slate-800">
-            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+        <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden panel-transition bg-slate-50 flex flex-col">
+            <div class="p-8 space-y-8 flex-1 overflow-y-auto leading-relaxed">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-white">Forensic Analysis</h2>
-                    <button onclick="closePanel()" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Event Analysis</h2>
+                    <button onclick="closePanel()" class="text-slate-400 hover:text-slate-900 bg-white p-1.5 rounded-lg border border-slate-200 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
-                <div id="detail-content" class="space-y-6">
-                    <div class="space-y-1">
-                        <span id="det-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border"></span>
-                        <p id="det-timestamp" class="text-[10px] font-mono text-slate-500"></p>
-                    </div>
-                    <div class="bg-slate-950 p-4 rounded border border-slate-800 font-mono text-[11px] space-y-3">
-                        <div class="flex justify-between"><span class="text-slate-500">Service:</span><span id="det-service" class="text-cyan-400"></span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Protocol:</span><span id="det-proto" class="text-slate-300"></span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Flag:</span><span id="det-flag" class="text-slate-300"></span></div>
-                        <div class="border-t border-slate-900 pt-2 flex justify-between"><span class="text-slate-500">Src Bytes:</span><span id="det-bytes" class="text-slate-300"></span></div>
-                    </div>
+                
+                <div id="detail-content" class="space-y-8">
                     <div class="space-y-2">
-                        <label class="text-[10px] font-bold uppercase text-slate-500 tracking-tighter">Explainability Engine (SHAP)</label>
-                        <div id="det-reason" class="text-xs leading-relaxed text-slate-300 bg-slate-950/50 p-3 rounded border border-slate-800 italic"></div>
+                        <span id="det-badge" class="px-3 py-1 rounded-md text-[10px] font-bold uppercase border shadow-sm inline-block"></span>
+                        <p id="det-timestamp" class="text-[11px] font-mono font-medium text-slate-400"></p>
                     </div>
-                    <div class="space-y-2 pt-4">
-                        <label class="text-[10px] font-bold uppercase text-slate-500">Response Protocol</label>
-                        <select class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
-                            <option selected disabled>Choose Action...</option>
-                            <option>Ban Source IP</option>
-                            <option>Quarantine Service</option>
-                            <option>Escalate to Tier 2</option>
-                            <option>Mark as False Positive</option>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm font-mono text-[12px] space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-50 pb-2"><span class="text-slate-400">Target Service</span><span id="det-service" class="text-cyan-700 font-bold uppercase"></span></div>
+                        <div class="flex justify-between items-center border-b border-slate-50 pb-2"><span class="text-slate-400">Protocol</span><span id="det-proto" class="text-slate-700 font-bold"></span></div>
+                        <div class="flex justify-between items-center border-b border-slate-50 pb-2"><span class="text-slate-400">Transmission Flag</span><span id="det-flag" class="text-slate-700"></span></div>
+                        <div class="pt-2 flex justify-between items-center"><span class="text-slate-400">Source Payload</span><span id="det-bytes" class="text-slate-900 font-bold"></span></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Explainable AI Analysis</label>
+                        <div id="det-reason" class="text-xs leading-relaxed text-slate-600 bg-white p-5 rounded-xl border border-slate-200 shadow-inner italic"></div>
+                    </div>
+
+                    <div class="space-y-3 pt-4">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Intervention Protocol</label>
+                        <select class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 font-medium focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all shadow-sm cursor-pointer appearance-none">
+                            <option selected disabled>Select mitigation strategy...</option>
+                            <option>Immediate IP Blacklist</option>
+                            <option>Sandboxed Observation</option>
+                            <option>Level 2 Escalation</option>
+                            <option>Whitelist (False Positive)</option>
                         </select>
                     </div>
                 </div>
             </div>
-            <div class="p-6 border-t border-slate-800 bg-slate-900/20">
-                <button class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold py-2.5 rounded uppercase tracking-widest transition-all">Execute Action</button>
+            <div class="p-8 border-t border-slate-200/60 bg-white/50 backdrop-blur-sm">
+                <button class="w-full bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-4 rounded-xl uppercase tracking-[0.2em] shadow-lg shadow-slate-200 transition-all active:scale-[0.98]">Execute Mitigation</button>
             </div>
         </aside>
     </main>
@@ -150,13 +181,14 @@
         let counts = { total: 0, safe: 0, warn: 0, crit: 0 };
         let activeFilters = new Set();
 
+        // Стили адаптированы под светлую тему (более темный текст для контраста)
         const styles = {
-            0: { lbl: 'L0 Safe', bg: 'bg-emerald-500/10', txt: 'text-emerald-500', bdr: 'border-emerald-500/20', cat: 'safe' },
-            1: { lbl: 'L1 Info', bg: 'bg-emerald-500/10', txt: 'text-emerald-500', bdr: 'border-emerald-500/20', cat: 'safe' },
-            2: { lbl: 'L2 Warn', bg: 'bg-blue-500/10', txt: 'text-blue-400', bdr: 'border-blue-500/20', cat: 'warn' },
-            3: { lbl: 'L3 Alert', bg: 'bg-amber-500/10', txt: 'text-amber-400', bdr: 'border-amber-500/20', cat: 'warn' },
-            4: { lbl: 'L4 High', bg: 'bg-orange-500/10', txt: 'text-orange-400', bdr: 'border-orange-500/20', cat: 'crit' },
-            5: { lbl: 'L5 Crit', bg: 'bg-red-500/10', txt: 'text-red-500', bdr: 'border-red-500/20', cat: 'crit' }
+            0: { lbl: 'L0 Safe', bg: 'bg-emerald-50', txt: 'text-emerald-700', bdr: 'border-emerald-200', cat: 'safe' },
+            1: { lbl: 'L1 Info', bg: 'bg-emerald-50', txt: 'text-emerald-700', bdr: 'border-emerald-200', cat: 'safe' },
+            2: { lbl: 'L2 Warn', bg: 'bg-blue-50', txt: 'text-blue-700', bdr: 'border-blue-200', cat: 'warn' },
+            3: { lbl: 'L3 Alert', bg: 'bg-amber-50', txt: 'text-amber-700', bdr: 'border-amber-200', cat: 'warn' },
+            4: { lbl: 'L4 High', bg: 'bg-orange-50', txt: 'text-orange-700', bdr: 'border-orange-200', cat: 'crit' },
+            5: { lbl: 'L5 Crit', bg: 'bg-red-50', txt: 'text-red-700', bdr: 'border-red-200', cat: 'crit' }
         };
 
         const ws = new WebSocket("ws://" + window.location.host + "/ws/alerts");
@@ -174,39 +206,35 @@
             updateStats(ui.cat);
 
             const row = document.createElement('div');
-            row.className = "log-item px-6 py-3 border-b border-slate-900 flex items-center cursor-pointer hover:bg-slate-900/40 transition-all group";
-            row.setAttribute('data-level', r.toString()); // Store as string for Set matching
+            // Увеличена высота (py-5) и межстрочный интервал для "дыхания" данных
+            row.className = "log-item px-8 py-5 border-b border-slate-100 flex items-center cursor-pointer hover:bg-slate-50/80 transition-all group animate-in slide-in-from-top-1 duration-300";
+            row.setAttribute('data-level', r.toString());
             row.onclick = () => selectLog(row, data, ts);
 
             row.innerHTML = `
-                <div class="w-20 flex-shrink-0">
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span>
+                <div class="w-24 flex-shrink-0">
+                    <span class="text-[9px] font-black px-2 py-1 rounded border shadow-sm ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span>
                 </div>
-                <div class="flex-1 min-w-0 px-4">
-                    <div class="text-xs text-white font-medium truncate">${p.service.toUpperCase()}</div>
-                    <div class="text-[10px] text-slate-500 font-mono">${p.protocol_type} // ${p.flag}</div>
+                <div class="flex-1 min-w-0 px-6">
+                    <div class="text-[13px] text-slate-900 font-bold truncate leading-none mb-1">${p.service.toUpperCase()}</div>
+                    <div class="text-[10px] text-slate-400 font-mono font-medium tracking-tight">${p.protocol_type} // ${p.flag}</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-[10px] text-slate-400 font-mono">${ts}</div>
-                    <div class="text-[9px] text-slate-600 uppercase font-bold">${p.src_bytes} B</div>
+                    <div class="text-[10px] text-slate-900 font-mono font-bold leading-none mb-1">${ts}</div>
+                    <div class="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">${p.src_bytes.toLocaleString()} bytes</div>
                 </div>
             `;
 
             const container = document.getElementById('stream-target');
             container.insertBefore(row, container.firstChild);
-
-            // Apply current filters to new log
             applyFiltersToElement(row);
         };
 
-        // --- FILTER LOGIC ---
         function toggleFilterMenu(e) {
             e.stopPropagation();
-            const menu = document.getElementById('filter-menu');
-            menu.classList.toggle('active');
+            document.getElementById('filter-menu').classList.toggle('active');
         }
 
-        // Attach event listeners to checkboxes
         document.querySelectorAll('.filter-checkbox').forEach(cb => {
             cb.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -222,11 +250,7 @@
 
         function applyFiltersToElement(el) {
             const level = el.getAttribute('data-level');
-            if (activeFilters.size === 0 || activeFilters.has(level)) {
-                el.style.display = 'flex';
-            } else {
-                el.style.display = 'none';
-            }
+            el.style.display = (activeFilters.size === 0 || activeFilters.has(level)) ? 'flex' : 'none';
         }
 
         function clearFilters() {
@@ -235,20 +259,17 @@
             runGlobalFilter();
         }
 
-        // Close menu when clicking outside
         window.addEventListener('click', (e) => {
             const menu = document.getElementById('filter-menu');
-            const btn = document.getElementById('filter-btn');
-            if (menu.classList.contains('active') && !menu.contains(e.target) && !btn.contains(e.target)) {
+            if (menu && !menu.contains(e.target) && !document.getElementById('filter-btn').contains(e.target)) {
                 menu.classList.remove('active');
             }
         });
 
-        // --- STATS & UI ---
         function updateStats(cat) {
             counts.total++;
             counts[cat]++;
-            document.getElementById('stat-total').innerText = counts.total;
+            document.getElementById('stat-total').innerText = counts.total.toLocaleString();
             document.getElementById('stat-safe').innerText = counts.safe;
             document.getElementById('stat-warn').innerText = counts.warn;
             document.getElementById('stat-crit').innerText = counts.crit;
@@ -259,20 +280,20 @@
             el.classList.add('selected-row');
 
             const panel = document.getElementById('detail-panel');
-            panel.classList.replace('w-0', 'w-96');
+            panel.classList.replace('w-0', 'w-[450px]');
             panel.classList.replace('opacity-0', 'opacity-100');
 
             const reasonEl = document.getElementById('det-reason');
-            reasonEl.innerHTML = `<span class="animate-pulse text-cyan-500 font-mono text-[10px]">RUNNING SHAP HEURISTICS...</span>`;
+            reasonEl.innerHTML = `<div class="flex items-center space-x-2"><span class="animate-spin h-3 w-3 border-2 border-cyan-600 border-t-transparent rounded-full"></span><span class="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest">SHAP heuristics processing...</span></div>`;
 
             const ui = styles[data.threat_rating];
             document.getElementById('det-badge').innerText = ui.lbl;
-            document.getElementById('det-badge').className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${ui.bg} ${ui.txt} ${ui.bdr}`;
-            document.getElementById('det-timestamp').innerText = `Detected at ${ts}`;
+            document.getElementById('det-badge').className = `px-3 py-1 rounded-lg text-[10px] font-black uppercase border shadow-sm ${ui.bg} ${ui.txt} ${ui.bdr}`;
+            document.getElementById('det-timestamp').innerText = `Incident Signature Detected @ ${ts}`;
             document.getElementById('det-service').innerText = data.event.service;
             document.getElementById('det-proto').innerText = data.event.protocol_type;
             document.getElementById('det-flag').innerText = data.event.flag;
-            document.getElementById('det-bytes').innerText = `${data.event.src_bytes} Bytes`;
+            document.getElementById('det-bytes').innerText = `${data.event.src_bytes.toLocaleString()} B`;
 
             try {
                 const resp = await fetch('/api/v1/explain', {
@@ -283,13 +304,13 @@
                 const result = await resp.json();
                 reasonEl.innerText = result.explanation;
             } catch (err) {
-                reasonEl.innerText = "Heuristic engine offline.";
+                reasonEl.innerText = "Internal analysis engine returned an error. Manual triage required.";
             }
         }
 
         function closePanel() {
             const panel = document.getElementById('detail-panel');
-            panel.classList.replace('w-96', 'w-0');
+            panel.classList.replace('w-[450px]', 'w-0');
             panel.classList.replace('opacity-100', 'opacity-0');
             document.querySelectorAll('.log-item').forEach(r => r.classList.remove('selected-row'));
         }
