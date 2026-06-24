@@ -9,30 +9,18 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        border: "hsl(var(--border))",
-                    }
-                }
-            }
+            theme: { extend: { colors: { border: "hsl(var(--border))" } } }
         }
     </script>
     <style>
         :root { --border: 214.3 31.8% 91.4%; }
         .dark { --border: 217.2 32.6% 17.5%; }
-
-        body { transition: background-color 0.3s, color 0.3s; }
+        body { transition: background-color 0.3s; }
         .log-scroll-container { height: calc(100vh - 110px); overflow-y: auto; display: flex; flex-direction: column; }
-        .log-scroll-container::-webkit-scrollbar { width: 6px; }
-        .log-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .log-scroll-container::-webkit-scrollbar { width: 4px; }
+        .log-scroll-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .dark .log-scroll-container::-webkit-scrollbar-thumb { background: #1e293b; }
-
-        .selected-row { 
-            background-color: rgba(8, 145, 178, 0.05) !important; 
-            border-left: 4px solid #0891b2 !important; 
-        }
-        .panel-transition { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .selected-row { background-color: rgba(8, 145, 178, 0.08) !important; border-left: 4px solid #0891b2 !important; }
         #filter-menu.active { display: block; }
     </style>
 </head>
@@ -41,102 +29,87 @@
     <header class="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-3 flex items-center justify-between relative z-50 shadow-sm">
         <div class="flex items-center space-x-4">
             <div class="text-cyan-600 dark:text-cyan-500 bg-cyan-50 dark:bg-cyan-950/30 p-2 rounded-lg">
-                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
-            <div>
-                <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white uppercase">AI Shield</h1>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-medium uppercase tracking-wider">SOC Matrix v2.5</p>
+            <div class="hidden sm:block">
+                <h1 class="text-xs font-bold tracking-tight text-slate-900 dark:text-white uppercase">AI Shield</h1>
+                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-mono uppercase">Matrix v2.5</p>
             </div>
         </div>
 
-        <!-- Search & Controls -->
-        <div class="flex-1 max-w-md mx-8 flex items-center space-x-2">
-            <div class="relative w-full">
+        <!-- Search & Stats Container -->
+        <div class="flex-1 max-w-2xl mx-6 flex items-center space-x-4">
+            <div class="relative flex-1">
                 <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="search-input" oninput="runGlobalFilter()" placeholder="Search service or protocol..." 
-                    class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2 pl-9 pr-4 text-xs focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                <input type="text" id="search-input" oninput="runGlobalFilter()" placeholder="Search logs..." 
+                    class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-1.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
             </div>
-            <button id="pause-btn" onclick="togglePause()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-400" title="Pause/Resume Stream">
+            
+            <!-- Stats Block (Восстановлен) -->
+            <div class="hidden lg:flex items-center space-x-4 border-l border-slate-200 dark:border-slate-800 pl-4">
+                <div class="flex flex-col"><span class="text-[8px] uppercase text-slate-400 font-bold">Total</span><span id="stat-total" class="text-[10px] font-mono font-bold">0</span></div>
+                <div class="flex flex-col"><span class="text-[8px] uppercase text-emerald-500 font-bold">Safe</span><span id="stat-safe" class="text-[10px] font-mono font-bold">0</span></div>
+                <div class="flex flex-col"><span class="text-[8px] uppercase text-amber-500 font-bold">Warn</span><span id="stat-warn" class="text-[10px] font-mono font-bold">0</span></div>
+                <div class="flex flex-col"><span class="text-[8px] uppercase text-red-500 font-bold">Crit</span><span id="stat-crit" class="text-[10px] font-mono font-bold">0</span></div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="pause-btn" onclick="togglePause()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-400">
                 <i data-lucide="pause" id="pause-icon" class="w-4 h-4"></i>
             </button>
-        </div>
-
-        <div class="flex items-center space-x-4">
-            <!-- Theme Toggle -->
-            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <i data-lucide="sun" class="hidden dark:block w-4 h-4 text-amber-400"></i>
                 <i data-lucide="moon" class="block dark:hidden w-4 h-4 text-slate-600"></i>
             </button>
-
-            <button id="filter-btn" onclick="toggleFilterMenu(event)" class="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
-                <i data-lucide="filter" class="w-3.5 h-3.5"></i>
-                <span>Filters</span>
-            </button>
-        </div>
-
-        <!-- Filter Dropdown -->
-        <div id="filter-menu" class="hidden absolute top-16 right-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-4 w-52 z-50">
-            <div class="space-y-2" id="level-filters">
-                <!-- Checkboxes generated by JS or static -->
-                <label class="flex items-center space-x-3 cursor-pointer group">
-                    <input type="checkbox" value="4" class="filter-checkbox w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-cyan-600">
-                    <span class="text-xs font-medium text-red-500">High/Critical Only</span>
-                </label>
-                <hr class="border-slate-100 dark:border-slate-800 my-2">
-                <button onclick="clearFilters()" class="w-full text-[10px] font-bold text-cyan-600 uppercase">Clear All</button>
-            </div>
         </div>
     </header>
 
     <main class="flex flex-1 overflow-hidden">
         <section id="log-container" class="flex-1 flex flex-col border-r border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950">
             <div class="px-6 py-2 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Stream</span>
-                    <div id="pause-indicator" class="hidden flex items-center space-x-1 text-amber-500 animate-pulse">
-                        <i data-lucide="pause-circle" class="w-3 h-3"></i>
-                        <span class="text-[9px] font-bold uppercase">Paused (Buffering...)</span>
+                <div class="flex items-center space-x-3">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Telemetry</span>
+                    <div id="pause-indicator" class="hidden flex items-center space-x-1 text-amber-500">
+                        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span>
+                        <span class="text-[9px] font-bold uppercase">Stream Paused</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
                     <span id="conn-dot" class="h-2 w-2 rounded-full bg-slate-300"></span>
-                    <span id="conn-status" class="text-[10px] font-mono font-bold text-slate-400 uppercase">Connecting...</span>
+                    <span id="conn-status" class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-tighter">Connecting...</span>
                 </div>
             </div>
 
             <div id="stream-target" class="log-scroll-container">
-                <div id="empty-state" class="flex flex-col items-center justify-center h-full py-20 opacity-40">
-                    <i data-lucide="wifi-off" class="w-8 h-8 mb-2"></i>
-                    <p class="text-[10px] font-bold uppercase tracking-widest">No Data Stream</p>
+                <div id="empty-state" class="flex flex-col items-center justify-center h-full py-20 opacity-20">
+                    <i data-lucide="refresh-cw" class="w-8 h-8 mb-2 animate-spin"></i>
+                    <p class="text-[10px] font-bold uppercase tracking-widest">Awaiting Data...</p>
                 </div>
             </div>
         </section>
 
-        <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden panel-transition bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl flex flex-col">
+        <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden transition-all duration-300 bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl flex flex-col">
             <div class="p-6 space-y-6 flex-1 overflow-y-auto">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Forensic Analysis</h2>
-                    <button onclick="closePanel()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    <h2 class="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Event Analysis</h2>
+                    <button onclick="closePanel()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
-                
                 <div id="detail-content" class="space-y-6">
                     <div class="space-y-1">
                         <span id="det-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border"></span>
                         <p id="det-timestamp" class="text-[10px] font-mono text-slate-400"></p>
                     </div>
-
                     <div class="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm font-mono text-[11px] space-y-3">
                         <div class="flex justify-between"><span class="text-slate-400">Service:</span><span id="det-service" class="text-cyan-600 dark:text-cyan-400 font-bold"></span></div>
                         <div class="flex justify-between"><span class="text-slate-400">Protocol:</span><span id="det-proto" class="dark:text-slate-300"></span></div>
                         <div class="flex justify-between"><span class="text-slate-400">Flag:</span><span id="det-flag" class="dark:text-slate-300"></span></div>
                         <div class="border-t border-slate-50 dark:border-slate-900 pt-2 flex justify-between"><span class="text-slate-400">Payload:</span><span id="det-bytes" class="dark:text-slate-300 font-bold"></span></div>
                     </div>
-
                     <div class="space-y-2">
-                        <label class="text-[10px] font-bold uppercase text-slate-400">AI Explanation (SHAP)</label>
+                        <label class="text-[10px] font-bold uppercase text-slate-400">Explainability Engine</label>
                         <div id="det-reason" class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 bg-white/50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 italic"></div>
                     </div>
-
                     <div class="space-y-2 pt-4">
                         <label class="text-[10px] font-bold uppercase text-slate-400">Response Action</label>
                         <select id="mitigation-action" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs outline-none focus:ring-2 focus:ring-cyan-500 transition-all">
@@ -149,17 +122,17 @@
                 </div>
             </div>
             <div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/20">
-                <button id="execute-btn" onclick="executeMitigation()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold py-3 rounded-lg uppercase tracking-widest transition-all shadow-lg shadow-cyan-500/20">Execute Mitigation</button>
+                <button id="execute-btn" onclick="executeMitigation()" class="w-full bg-slate-900 dark:bg-cyan-600 hover:bg-slate-800 dark:hover:bg-cyan-500 text-white text-[10px] font-bold py-3 rounded-lg uppercase tracking-widest transition-all">Execute Mitigation</button>
             </div>
         </aside>
     </main>
 
     <script>
-        // --- CONFIG & STATE ---
         let isPaused = false;
         let pausedBuffer = [];
         let ws;
         let counts = { total: 0, safe: 0, warn: 0, crit: 0 };
+
         const styles = {
             0: { lbl: 'L0 Safe', bg: 'bg-emerald-50 dark:bg-emerald-500/10', txt: 'text-emerald-600 dark:text-emerald-500', bdr: 'border-emerald-200 dark:border-emerald-500/20', cat: 'safe' },
             1: { lbl: 'L1 Info', bg: 'bg-emerald-50 dark:bg-emerald-500/10', txt: 'text-emerald-600 dark:text-emerald-500', bdr: 'border-emerald-200 dark:border-emerald-500/20', cat: 'safe' },
@@ -169,16 +142,13 @@
             5: { lbl: 'L5 Crit', bg: 'bg-red-50 dark:bg-red-500/10', txt: 'text-red-600 dark:text-red-500', bdr: 'border-red-200 dark:border-red-500/20', cat: 'crit' }
         };
 
-        // --- THEME LOGIC ---
         function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.toggle('dark');
+            const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             lucide.createIcons();
         }
         if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
 
-        // --- WEBSOCKET LOGIC (FIXED) ---
         function connectWS() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws/alerts`;
@@ -194,36 +164,31 @@
             };
 
             ws.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if (isPaused) {
-                    pausedBuffer.push(data);
-                } else {
-                    renderLog(data);
-                }
+                try {
+                    const data = JSON.parse(e.data);
+                    if (isPaused) pausedBuffer.push(data);
+                    else renderLog(data);
+                } catch (err) { console.error("Data error:", err); }
             };
 
             ws.onclose = () => {
                 statusText.innerText = "Disconnected";
                 statusText.className = "text-[10px] font-mono font-bold text-red-500 uppercase";
                 statusDot.className = "h-2 w-2 rounded-full bg-red-500";
-                setTimeout(connectWS, 3000); // Auto-reconnect
+                setTimeout(connectWS, 3000);
             };
         }
 
-        // --- STREAM CONTROL ---
         function togglePause() {
             isPaused = !isPaused;
-            const btn = document.getElementById('pause-btn');
             const icon = document.getElementById('pause-icon');
             const indicator = document.getElementById('pause-indicator');
-
             if (isPaused) {
                 icon.setAttribute('data-lucide', 'play');
                 indicator.classList.remove('hidden');
             } else {
                 icon.setAttribute('data-lucide', 'pause');
                 indicator.classList.add('hidden');
-                // Flush buffer
                 pausedBuffer.forEach(renderLog);
                 pausedBuffer = [];
             }
@@ -232,7 +197,7 @@
 
         function renderLog(data) {
             const emptyState = document.getElementById('empty-state');
-            if(emptyState) emptyState.remove();
+            if(emptyState) emptyState.classList.add('hidden');
 
             const p = data.event;
             const r = data.threat_rating;
@@ -242,7 +207,7 @@
             updateStats(ui.cat);
 
             const row = document.createElement('div');
-            row.className = "log-item px-6 py-4 border-b border-slate-100 dark:border-slate-900 flex items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all group animate-in slide-in-from-top-1";
+            row.className = "log-item px-6 py-4 border-b border-slate-100 dark:border-slate-900 flex items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-all";
             row.setAttribute('data-level', r);
             row.setAttribute('data-search', `${p.service} ${p.protocol_type}`.toLowerCase());
             row.onclick = () => selectLog(row, data, ts);
@@ -263,73 +228,48 @@
 
             const container = document.getElementById('stream-target');
             container.insertBefore(row, container.firstChild);
-            applyFiltersToElement(row);
+            runGlobalFilter(); // Применяем текущий поиск к новому элементу
 
-            // Limit DOM size for performance
             if (container.children.length > 100) container.lastChild.remove();
         }
 
-        // --- FILTER & SEARCH ---
         function runGlobalFilter() {
             const query = document.getElementById('search-input').value.toLowerCase();
             document.querySelectorAll('.log-item').forEach(el => {
-                const matchesSearch = el.getAttribute('data-search').includes(query);
-                // Можно добавить логику для чекбоксов уровней здесь
-                el.style.display = matchesSearch ? 'flex' : 'none';
+                const matches = el.getAttribute('data-search').includes(query);
+                el.style.display = matches ? 'flex' : 'none';
             });
         }
 
-        function applyFiltersToElement(el) {
-            // Применяется при создании нового элемента
-            const query = document.getElementById('search-input').value.toLowerCase();
-            if (query && !el.getAttribute('data-search').includes(query)) {
-                el.style.display = 'none';
-            }
-        }
-
-        // --- ACTIONS ---
-        async function executeMitigation() {
-            const action = document.getElementById('mitigation-action').value;
-            const service = document.getElementById('det-service').innerText;
-            
-            if (!confirm(`Confirm execution: ${action.toUpperCase()} for ${service}?`)) return;
-
-            const btn = document.getElementById('execute-btn');
-            btn.disabled = true;
-            btn.innerText = "EXECUTING...";
-
-            try {
-                // Имитация вызова API
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                alert("Action executed successfully.");
-                closePanel();
-            } catch (e) {
-                alert("Action failed.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Execute Mitigation";
-            }
-        }
-
-        // --- UI HELPERS ---
         function updateStats(cat) {
             counts.total++; counts[cat]++;
-            document.getElementById('stat-total').innerText = counts.total;
-            document.getElementById('stat-safe').innerText = counts.safe;
-            document.getElementById('stat-warn').innerText = counts.warn;
-            document.getElementById('stat-crit').innerText = counts.crit;
+            const ids = ['stat-total', 'stat-safe', 'stat-warn', 'stat-crit'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === 'stat-total') el.innerText = counts.total;
+                    else el.innerText = counts[id.split('-')[1]];
+                }
+            });
+        }
+
+        async function executeMitigation() {
+            const service = document.getElementById('det-service').innerText;
+            if (!confirm(`Execute mitigation for ${service}?`)) return;
+            const btn = document.getElementById('execute-btn');
+            btn.disabled = true; btn.innerText = "EXECUTING...";
+            await new Promise(r => setTimeout(r, 800));
+            alert("Protocol executed.");
+            btn.disabled = false; btn.innerText = "Execute Mitigation";
+            closePanel();
         }
 
         async function selectLog(el, data, ts) {
             document.querySelectorAll('.log-item').forEach(r => r.classList.remove('selected-row'));
             el.classList.add('selected-row');
-
             const panel = document.getElementById('detail-panel');
             panel.classList.replace('w-0', 'w-96');
             panel.classList.replace('opacity-0', 'opacity-100');
-
-            const reasonEl = document.getElementById('det-reason');
-            reasonEl.innerHTML = `<span class="animate-pulse text-cyan-500 font-mono text-[10px]">ANALYZING...</span>`;
 
             const ui = styles[data.threat_rating];
             document.getElementById('det-badge').innerText = ui.lbl;
@@ -339,6 +279,7 @@
             document.getElementById('det-proto').innerText = data.event.protocol_type;
             document.getElementById('det-flag').innerText = data.event.flag;
             document.getElementById('det-bytes').innerText = `${data.event.src_bytes} Bytes`;
+            document.getElementById('det-reason').innerText = "Analyzing heuristics...";
 
             try {
                 const resp = await fetch('/api/v1/explain', {
@@ -347,10 +288,8 @@
                     body: JSON.stringify(data.event)
                 });
                 const result = await resp.json();
-                reasonEl.innerText = result.explanation;
-            } catch (err) {
-                reasonEl.innerText = "Heuristic engine offline. Manual review required.";
-            }
+                document.getElementById('det-reason').innerText = result.explanation;
+            } catch (e) { document.getElementById('det-reason').innerText = "Explainability engine offline."; }
         }
 
         function closePanel() {
@@ -360,14 +299,6 @@
             document.querySelectorAll('.log-item').forEach(r => r.classList.remove('selected-row'));
         }
 
-        function toggleFilterMenu(e) {
-            e.stopPropagation();
-            document.getElementById('filter-menu').classList.toggle('hidden');
-        }
-
-        window.onclick = () => document.getElementById('filter-menu').classList.add('hidden');
-
-        // Init
         lucide.createIcons();
         connectWS();
     </script>
