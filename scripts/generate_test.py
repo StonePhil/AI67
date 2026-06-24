@@ -54,8 +54,7 @@ def run_simulation():
     while True:
         raw_log = random.choice(logs)
         
-        # SENIOR FIX: Use zip to map columns dynamically. 
-        # This prevents IndexError if the line has 42 columns instead of 43.
+        
         log_dict = dict(zip(COLUMNS, raw_log))
         
         # Data Type Casting for the Engine
@@ -76,7 +75,7 @@ def run_simulation():
         except Exception as e:
             print(f"⚠️ Stream Error: {e}")
 
-        time.sleep(1.5) # Speed of the dashboard updates
+        time.sleep(1) # Speed of the dashboard updates
 
 if __name__ == "__main__":
     run_simulation()

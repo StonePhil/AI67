@@ -3,192 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Shield // Live Ops Deck</title>
+    <title>AI Shield // Live Matrix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @keyframes flash {
-            0%, 100% { background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-            50% { background-color: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.8); }
-        }
-        .pulse-critical { animation: flash 1.2s infinite ease-in-out; }
+        .log-scroll::-webkit-scrollbar { width: 4px; }
+        .log-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .selected-row { background-color: rgba(6, 182, 212, 0.1) !important; border-left: 3px solid #06b6d4 !important; }
+        .panel-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col overflow-hidden">
+<body class="bg-slate-950 text-slate-300 min-h-screen font-sans flex flex-col overflow-hidden">
 
-    <header class="border-b border-slate-800 bg-slate-900/40 backdrop-blur px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="bg-cyan-500/10 p-2 rounded-lg border border-cyan-500/30 text-cyan-400">
-                <i data-lucide="shield-check" class="w-6 h-6"></i>
-            </div>
+    <!-- Top Navigation / Counters -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <div class="text-cyan-500"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
             <div>
-                <h1 class="text-lg font-bold tracking-wider text-white">AI SHIELD</h1>
-                <p class="text-xs text-slate-400 font-mono">Infrastructure Matrix Tracker V1</p>
+                <h1 class="text-sm font-bold tracking-tighter text-white uppercase">AI Shield</h1>
+                <p class="text-[10px] text-slate-500 font-mono">v2.0.0-stable</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
-            <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            <span id="conn-status" class="text-xs font-mono text-slate-300">LIVE SOCKET BOUND</span>
+
+        <div id="stats-bar" class="flex items-center space-x-6">
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] uppercase text-slate-500 font-bold">Total</span>
+                <span id="stat-total" class="text-sm font-mono text-white">0</span>
+            </div>
+            <div class="h-6 w-[1px] bg-slate-800"></div>
+            <div class="flex space-x-4">
+                <div class="flex flex-col items-center"><span class="text-[10px] text-emerald-500 font-bold">L0-1</span><span id="stat-safe" class="text-sm font-mono">0</span></div>
+                <div class="flex flex-col items-center"><span class="text-[10px] text-amber-500 font-bold">L2-3</span><span id="stat-warn" class="text-sm font-mono">0</span></div>
+                <div class="flex flex-col items-center"><span class="text-[10px] text-red-500 font-bold">L4-5</span><span id="stat-crit" class="text-sm font-mono">0</span></div>
+            </div>
         </div>
     </header>
 
-    <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 h-[calc(100vh-80px)] overflow-hidden">
+    <main class="flex flex-1 overflow-hidden">
 
-        <div class="lg:col-span-2 flex flex-col space-y-3 h-full">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xs font-mono tracking-widest text-slate-400 uppercase">Real-Time Ingestion Buffer</h2>
-                <span id="counter" class="text-xs font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">0 logs mapped</span>
+        <!-- Log List Section -->
+        <section id="log-container" class="flex-1 flex flex-col panel-transition border-r border-slate-800">
+            <div class="px-6 py-2 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
+                <span class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Ingestion Stream</span>
+                <span id="conn-status" class="text-[10px] font-mono text-cyan-500 animate-pulse">Socket Live</span>
             </div>
 
-            <div class="flex-1 bg-slate-900/10 border border-slate-800 rounded-xl overflow-y-auto shadow-inner">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-900/80 border-b border-slate-800 sticky top-0 text-xs font-mono text-slate-400 uppercase">
-                        <tr>
-                            <th class="p-4 w-1/4">Threat Level</th>
-                            <th class="p-4">Identity Matrix</th>
-                            <th class="p-4">Action Hook</th>
-                            <th class="p-4 text-right">Triage</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stream-target" class="divide-y divide-slate-900"></tbody>
-                </table>
-                <div id="empty-state" class="flex flex-col items-center justify-center pt-32 text-slate-600 space-y-2">
-                    <i data-lucide="activity" class="w-6 h-6 animate-pulse text-cyan-500"></i>
-                    <p class="text-xs font-mono">Awaiting metric stream transmission array...</p>
+            <div id="stream-target" class="log-scroll flex-1 overflow-y-auto">
+                <!-- Logs injected here -->
+                <div id="empty-state" class="flex flex-col items-center justify-center h-full opacity-20">
+                    <i data-lucide="database" class="w-12 h-12 mb-2"></i>
+                    <p class="text-xs font-mono uppercase">Awaiting Data...</p>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="bg-slate-900/20 border border-slate-800 rounded-xl p-6 flex flex-col justify-between h-[calc(100vh-140px)]">
-            <div class="space-y-6">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                    <i data-lucide="binary" class="text-cyan-400 w-4 h-4"></i>
-                    <h3 class="text-sm font-mono font-bold uppercase tracking-wider text-white">Heuristic Diagnostics</h3>
+        <!-- Triage Detail Panel (Hidden by default) -->
+        <aside id="detail-panel" class="w-0 opacity-0 overflow-hidden panel-transition bg-slate-900/30 backdrop-blur-xl flex flex-col">
+            <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-white">Triage Details</h2>
+                    <button onclick="closePanel()" class="text-slate-500 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
 
-                <div id="blank-panel" class="text-center py-24 text-slate-500 font-mono text-xs space-y-2">
-                    <i data-lucide="scan-eye" class="w-8 h-8 mx-auto text-slate-700 animate-pulse"></i>
-                    <p>Select an ingested stream event row to view structural ML weight isolation details.</p>
-                </div>
-
-                <div id="active-panel" class="hidden space-y-5">
-                    <div class="flex items-center justify-between">
-                        <span id="view-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold border"></span>
-                        <span id="view-action" class="text-xs font-mono text-slate-400"></span>
+                <div id="detail-content" class="space-y-6">
+                    <!-- Dynamic Content -->
+                    <div class="space-y-1">
+                        <span id="det-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border"></span>
+                        <p id="det-timestamp" class="text-[10px] font-mono text-slate-500"></p>
                     </div>
 
-                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 font-mono text-xs space-y-2.5">
-                        <div><span class="text-cyan-400">User Context:</span> <span id="view-user" class="text-slate-200 font-sans"></span></div>
-                        <div><span class="text-cyan-400">Source Network IP:</span> <span id="view-ip" class="text-slate-200"></span></div>
-                        <div><span class="text-cyan-400">Telemetry Specs:</span> <span id="view-metrics" class="text-slate-400"></span></div>
+                    <div class="bg-slate-950 p-4 rounded border border-slate-800 font-mono text-[11px] space-y-3">
+                        <div class="flex justify-between"><span class="text-slate-500">Service:</span><span id="det-service" class="text-cyan-400"></span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Protocol:</span><span id="det-proto" class="text-slate-300"></span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Flag:</span><span id="det-flag" class="text-slate-300"></span></div>
+                        <div class="border-t border-slate-900 pt-2 flex justify-between"><span class="text-slate-500">Src Bytes:</span><span id="det-bytes" class="text-slate-300"></span></div>
                     </div>
 
                     <div class="space-y-2">
-                        <span class="text-[11px] font-mono tracking-widest text-slate-400 uppercase block">Engine Explanation:</span>
-                        <p id="view-reason" class="text-sm bg-cyan-950/10 text-slate-200 border border-cyan-900/30 p-4 rounded-xl font-mono text-xs leading-relaxed"></p>
+                        <label class="text-[10px] font-bold uppercase text-slate-500">Engine Analysis</label>
+                        <p id="det-reason" class="text-xs leading-relaxed text-slate-300 italic"></p>
+                    </div>
+
+                    <div class="space-y-2 pt-4">
+                        <label class="text-[10px] font-bold uppercase text-slate-500">Response Protocol</label>
+                        <select class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                            <option selected disabled>Choose Action...</option>
+                            <option>Ban Source IP</option>
+                            <option>Quarantine Service</option>
+                            <option>Escalate to Tier 2</option>
+                            <option>Mark as False Positive</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-slate-950 border border-dashed border-slate-800 p-4 rounded-lg">
-                <div class="text-[10px] font-mono tracking-widest text-amber-500 font-bold uppercase mb-1 flex items-center gap-1">
-                    <i data-lucide="git-commit" class="w-3 h-3"></i> V2 Implementation Path
-                </div>
-                <p class="text-[11px] text-slate-400 leading-normal">
-                    Next Phase Deployment: Fine-tuning local classification models and implementing interactive manual control overrides.
-                </p>
+            <div class="p-6 border-t border-slate-800">
+                <button class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold py-2.5 rounded uppercase tracking-widest transition-colors">Execute Action</button>
             </div>
-        </div>
+        </aside>
     </main>
 
     <script>
-        lucide.createIcons();
-        let logsCount = 0;
+    lucide.createIcons();
+    let counts = { total: 0, safe: 0, warn: 0, crit: 0 };
+    const styles = {
+        0: { lbl: 'L0 Safe', bg: 'bg-emerald-500/10', txt: 'text-emerald-500', bdr: 'border-emerald-500/20', cat: 'safe' },
+        1: { lbl: 'L1 Info', bg: 'bg-emerald-500/10', txt: 'text-emerald-500', bdr: 'border-emerald-500/20', cat: 'safe' },
+        2: { lbl: 'L2 Warn', bg: 'bg-blue-500/10', txt: 'text-blue-400', bdr: 'border-blue-500/20', cat: 'warn' },
+        3: { lbl: 'L3 Alert', bg: 'bg-amber-500/10', txt: 'text-amber-400', bdr: 'border-amber-500/20', cat: 'warn' },
+        4: { lbl: 'L4 High', bg: 'bg-orange-500/10', txt: 'text-orange-400', bdr: 'border-orange-500/20', cat: 'crit' },
+        5: { lbl: 'L5 Crit', bg: 'bg-red-500/10', txt: 'text-red-500', bdr: 'border-red-500/20', cat: 'crit' }
+    };
 
-        const styles = {
-            0: { lbl: '0 - Secure Baseline', bg: 'bg-emerald-500/10', txt: 'text-emerald-400', bdr: 'border-emerald-500/20' },
-            1: { lbl: '1 - Low Deviation', bg: 'bg-teal-500/10', txt: 'text-teal-400', bdr: 'border-teal-500/20' },
-            2: { lbl: '2 - Outlier Info', bg: 'bg-blue-500/10', txt: 'text-blue-400', bdr: 'border-blue-500/20' },
-            3: { lbl: '3 - Warning Status', bg: 'bg-amber-500/10', txt: 'text-amber-400', bdr: 'border-amber-500/20' },
-            4: { lbl: '4 - High Security', bg: 'bg-orange-500/10', txt: 'text-orange-400', bdr: 'border-orange-500/20' },
-            5: { lbl: '5 - Critical Alert', bg: 'bg-red-500/20 pulse-critical', txt: 'text-red-400', bdr: 'border-red-500/50' }
-        };
+    // WebSocket Setup
+    const ws = new WebSocket("ws://" + window.location.host + "/ws/alerts");
 
-        // WebSocket Connection Logic
-        const targetLoc = "ws://" + window.location.host + "/ws/alerts";
-        const ws = new WebSocket(targetLoc);
+    ws.onmessage = (e) => {
+        const emptyState = document.getElementById('empty-state');
+        if(emptyState) emptyState.classList.add('hidden');
 
-        ws.onopen = () => {
-            console.log("Connected to AI Shield WebSocket");
-            document.getElementById('conn-status').innerText = "LIVE SOCKET BOUND";
-            document.getElementById('conn-status').className = "text-xs font-mono text-cyan-400";
-        };
+        const data = JSON.parse(e.data);
+        const p = data.event;
+        const r = data.threat_rating;
+        const ui = styles[r] || styles[0];
+        const ts = new Date().toLocaleTimeString();
 
-        ws.onmessage = (e) => {
-            console.log("Data received:", e.data);
-            document.getElementById('empty-state').classList.add('hidden');
+        updateStats(ui.cat);
 
-            const data = JSON.parse(e.data);
-            const p = data.event; // This is the NSL-KDD log
-            const r = data.threat_rating;
-            const ui = styles[r] || styles[0];
+        const row = document.createElement('div');
+        row.className = "px-6 py-3 border-b border-slate-900 flex items-center cursor-pointer hover:bg-slate-900/40 transition-all group";
 
-            logsCount++;
-            document.getElementById('counter').innerText = `${logsCount} logs mapped`;
+        // Use a wrapper function to call the async selectLog
+        row.onclick = () => selectLog(row, data, ts);
 
-            const row = document.createElement('tr');
-            row.className = "hover:bg-slate-900/40 cursor-pointer transition-colors group border-b border-slate-900";
+        row.innerHTML = `
+            <div class="w-20 flex-shrink-0">
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span>
+            </div>
+            <div class="flex-1 min-w-0 px-4">
+                <div class="text-xs text-white font-medium truncate">${p.service.toUpperCase()}</div>
+                <div class="text-[10px] text-slate-500 font-mono">${p.protocol_type} // ${p.flag}</div>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] text-slate-400 font-mono">${ts}</div>
+                <div class="text-[9px] text-slate-600 uppercase font-bold">${p.src_bytes} B</div>
+            </div>
+        `;
 
-            // CLICK HANDLER FOR SIDEBAR
-            row.onclick = () => {
-                document.getElementById('blank-panel').classList.add('hidden');
-                document.getElementById('active-panel').classList.remove('hidden');
+        const container = document.getElementById('stream-target');
+        container.insertBefore(row, container.firstChild);
+    };
 
-                const badge = document.getElementById('view-badge');
-                badge.innerText = ui.lbl.toUpperCase();
-                badge.className = `px-2 py-0.5 rounded text-xs font-mono font-bold border ${ui.bg} ${ui.txt} ${ui.bdr}`;
+    function updateStats(cat) {
+        counts.total++;
+        counts[cat]++;
+        document.getElementById('stat-total').innerText = counts.total;
+        document.getElementById('stat-safe').innerText = counts.safe;
+        document.getElementById('stat-warn').innerText = counts.warn;
+        document.getElementById('stat-crit').innerText = counts.crit;
+    }
 
-                document.getElementById('view-action').innerText = `PROTOCOL: ${p.protocol_type.toUpperCase()}`;
-                document.getElementById('view-user').innerText = `Service: ${p.service}`;
-                document.getElementById('view-ip').innerText = `Traffic Flag: ${p.flag}`;
-                document.getElementById('view-metrics').innerText =
-                    `In: ${p.src_bytes}B // Out: ${p.dst_bytes}B // Conn Count: ${p.count}`;
-                document.getElementById('view-reason').innerText = data.ai_analysis;
-            };
+    async function selectLog(el, data, ts) {
+        // Highlight logic
+        document.querySelectorAll('#stream-target > div').forEach(r => r.classList.remove('selected-row'));
+        el.classList.add('selected-row');
 
-            // TABLE ROW CONTENT
-            row.innerHTML = `
-                <td class="p-4">
-                    <span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">
-                        ${ui.lbl}
-                    </span>
-                </td>
-                <td class="p-4 font-mono text-xs">
-                    <div class="text-slate-200 text-sm font-sans">${p.service.toUpperCase()}</div>
-                    <div class="text-slate-500">${p.protocol_type} // ${p.flag}</div>
-                </td>
-                <td class="p-4 text-xs text-slate-300 font-mono font-semibold">
-                    ${p.src_bytes} Bytes
-                </td>
-                <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">
-                    Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i>
-                </td>
-            `;
+        // Open Panel
+        const panel = document.getElementById('detail-panel');
+        panel.classList.replace('w-0', 'w-96');
+        panel.classList.replace('opacity-0', 'opacity-100');
 
-            const container = document.getElementById('stream-target');
-            container.insertBefore(row, container.firstChild);
-            lucide.createIcons();
-        };
+        // Set Loading State for SHAP
+        const reasonEl = document.getElementById('det-reason');
+        reasonEl.innerHTML = `<span class="animate-pulse text-cyan-500 font-mono text-[10px]">INSPECTING HEURISTICS...</span>`;
 
-        ws.onclose = () => {
-            const indicator = document.getElementById('conn-status');
-            indicator.innerText = "STREAM OFFLINE";
-            indicator.className = "text-xs font-mono text-red-400";
-        };
+        // Populate Metadata
+        const ui = styles[data.threat_rating];
+        document.getElementById('det-badge').innerText = ui.lbl;
+        document.getElementById('det-badge').className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${ui.bg} ${ui.txt} ${ui.bdr}`;
+        document.getElementById('det-timestamp').innerText = `Detected at ${ts}`;
+        document.getElementById('det-service').innerText = data.event.service;
+        document.getElementById('det-proto').innerText = data.event.protocol_type;
+        document.getElementById('det-flag').innerText = data.event.flag;
+        document.getElementById('det-bytes').innerText = `${data.event.src_bytes} Bytes`;
 
-        ws.onerror = (err) => {
-            console.error("WebSocket Error:", err);
-        };
+        // Fetch SHAP
+        try {
+            const resp = await fetch('/api/v1/explain', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data.event)
+            });
+            const result = await resp.json();
+            reasonEl.innerText = result.explanation;
+        } catch (err) {
+            reasonEl.innerText = "Explainability engine offline.";
+        }
+    }
+
+    function closePanel() {
+        const panel = document.getElementById('detail-panel');
+        panel.classList.replace('w-96', 'w-0');
+        panel.classList.replace('opacity-100', 'opacity-0');
+        document.querySelectorAll('#stream-target > div').forEach(r => r.classList.remove('selected-row'));
+    }
     </script>
 </body>
 </html>
