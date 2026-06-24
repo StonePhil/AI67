@@ -114,14 +114,23 @@
             5: { lbl: '5 - Critical Alert', bg: 'bg-red-500/20 pulse-critical', txt: 'text-red-400', bdr: 'border-red-500/50' }
         };
 
+        // WebSocket Connection Logic
         const targetLoc = "ws://" + window.location.host + "/ws/alerts";
-        const ws = new WebSocket(window.location.host ? targetLoc : "ws://127.0.0.1:8000/ws/alerts");
+        const ws = new WebSocket(targetLoc);
+
+        ws.onopen = () => {
+            console.log("Connected to AI Shield WebSocket");
+            document.getElementById('conn-status').innerText = "LIVE SOCKET BOUND";
+            document.getElementById('conn-status').className = "text-xs font-mono text-cyan-400";
+        };
 
         ws.onmessage = (e) => {
+            console.log("Data received:", e.data);
             document.getElementById('empty-state').classList.add('hidden');
+
             const data = JSON.parse(e.data);
-            const p = data.event; // The NSL-KDD Log
-            const r = data.threat_rating; // 0-5
+            const p = data.event; // This is the NSL-KDD log
+            const r = data.threat_rating;
             const ui = styles[r] || styles[0];
 
             logsCount++;
@@ -130,7 +139,7 @@
             const row = document.createElement('tr');
             row.className = "hover:bg-slate-900/40 cursor-pointer transition-colors group border-b border-slate-900";
 
-            // Inside ws.onmessage
+            // CLICK HANDLER FOR SIDEBAR
             row.onclick = () => {
                 document.getElementById('blank-panel').classList.add('hidden');
                 document.getElementById('active-panel').classList.remove('hidden');
@@ -141,32 +150,29 @@
 
                 document.getElementById('view-action').innerText = `PROTOCOL: ${p.protocol_type.toUpperCase()}`;
                 document.getElementById('view-user').innerText = `Service: ${p.service}`;
-                document.getElementById('view-ip').innerText = `Actual Ground Truth: ${p.label}`; // This shows if the AI was right!
+                document.getElementById('view-ip').innerText = `Traffic Flag: ${p.flag}`;
                 document.getElementById('view-metrics').innerText =
-                    `Src Bytes: ${p.src_bytes} // Dst Bytes: ${p.dst_bytes} // Connections: ${p.count}`;
+                    `In: ${p.src_bytes}B // Out: ${p.dst_bytes}B // Conn Count: ${p.count}`;
                 document.getElementById('view-reason').innerText = data.ai_analysis;
             };
 
-    row.innerHTML = `
-        <td class="p-4"><span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span></td>
-        <td class="p-4 font-mono text-xs">
-            <div class="text-slate-200 text-sm font-sans">${p.service.toUpperCase()}</div>
-            <div class="text-slate-500">${p.protocol_type} // ${p.flag}</div>
-        </td>
-        <td class="p-4 text-xs text-slate-300 font-mono font-semibold">${p.src_bytes} B</td>
-        <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i></td>
-    `;
-
-    const container = document.getElementById('stream-target');
-    container.insertBefore(row, container.firstChild);
-    lucide.createIcons();
-};
-
+            // TABLE ROW CONTENT
             row.innerHTML = `
-                <td class="p-4"><span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span></td>
-                <td class="p-4 font-mono text-xs"><div class="text-slate-200 text-sm font-sans">${p.user_id}</div><div class="text-slate-500">${p.ip_address}</div></td>
-                <td class="p-4 text-xs text-slate-300 font-mono font-semibold">${p.action}</td>
-                <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i></td>
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">
+                        ${ui.lbl}
+                    </span>
+                </td>
+                <td class="p-4 font-mono text-xs">
+                    <div class="text-slate-200 text-sm font-sans">${p.service.toUpperCase()}</div>
+                    <div class="text-slate-500">${p.protocol_type} // ${p.flag}</div>
+                </td>
+                <td class="p-4 text-xs text-slate-300 font-mono font-semibold">
+                    ${p.src_bytes} Bytes
+                </td>
+                <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">
+                    Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i>
+                </td>
             `;
 
             const container = document.getElementById('stream-target');
@@ -178,6 +184,10 @@
             const indicator = document.getElementById('conn-status');
             indicator.innerText = "STREAM OFFLINE";
             indicator.className = "text-xs font-mono text-red-400";
+        };
+
+        ws.onerror = (err) => {
+            console.error("WebSocket Error:", err);
         };
     </script>
 </body>
