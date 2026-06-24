@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Shield // Live Ops Deck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes flash {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
+            50% { background-color: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.8); }
+        }
+        .pulse-critical { animation: flash 1.2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col overflow-hidden">
+
+    <header class="border-b border-slate-800 bg-slate-900/40 backdrop-blur px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-cyan-500/10 p-2 rounded-lg border border-cyan-500/30 text-cyan-400">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wider text-white">AI SHIELD</h1>
+                <p class="text-xs text-slate-400 font-mono">Infrastructure Matrix Tracker V1</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
+            <span class="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span id="conn-status" class="text-xs font-mono text-slate-300">LIVE SOCKET BOUND</span>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 h-[calc(100vh-80px)] overflow-hidden">
+
+        <div class="lg:col-span-2 flex flex-col space-y-3 h-full">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xs font-mono tracking-widest text-slate-400 uppercase">Real-Time Ingestion Buffer</h2>
+                <span id="counter" class="text-xs font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">0 logs mapped</span>
+            </div>
+
+            <div class="flex-1 bg-slate-900/10 border border-slate-800 rounded-xl overflow-y-auto shadow-inner">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-900/80 border-b border-slate-800 sticky top-0 text-xs font-mono text-slate-400 uppercase">
+                        <tr>
+                            <th class="p-4 w-1/4">Threat Level</th>
+                            <th class="p-4">Identity Matrix</th>
+                            <th class="p-4">Action Hook</th>
+                            <th class="p-4 text-right">Triage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stream-target" class="divide-y divide-slate-900"></tbody>
+                </table>
+                <div id="empty-state" class="flex flex-col items-center justify-center pt-32 text-slate-600 space-y-2">
+                    <i data-lucide="activity" class="w-6 h-6 animate-pulse text-cyan-500"></i>
+                    <p class="text-xs font-mono">Awaiting metric stream transmission array...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/20 border border-slate-800 rounded-xl p-6 flex flex-col justify-between h-[calc(100vh-140px)]">
+            <div class="space-y-6">
+                <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+                    <i data-lucide="binary" class="text-cyan-400 w-4 h-4"></i>
+                    <h3 class="text-sm font-mono font-bold uppercase tracking-wider text-white">Heuristic Diagnostics</h3>
+                </div>
+
+                <div id="blank-panel" class="text-center py-24 text-slate-500 font-mono text-xs space-y-2">
+                    <i data-lucide="scan-eye" class="w-8 h-8 mx-auto text-slate-700 animate-pulse"></i>
+                    <p>Select an ingested stream event row to view structural ML weight isolation details.</p>
+                </div>
+
+                <div id="active-panel" class="hidden space-y-5">
+                    <div class="flex items-center justify-between">
+                        <span id="view-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold border"></span>
+                        <span id="view-action" class="text-xs font-mono text-slate-400"></span>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 font-mono text-xs space-y-2.5">
+                        <div><span class="text-cyan-400">User Context:</span> <span id="view-user" class="text-slate-200 font-sans"></span></div>
+                        <div><span class="text-cyan-400">Source Network IP:</span> <span id="view-ip" class="text-slate-200"></span></div>
+                        <div><span class="text-cyan-400">Telemetry Specs:</span> <span id="view-metrics" class="text-slate-400"></span></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-mono tracking-widest text-slate-400 uppercase block">Engine Explanation:</span>
+                        <p id="view-reason" class="text-sm bg-cyan-950/10 text-slate-200 border border-cyan-900/30 p-4 rounded-xl font-mono text-xs leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 border border-dashed border-slate-800 p-4 rounded-lg">
+                <div class="text-[10px] font-mono tracking-widest text-amber-500 font-bold uppercase mb-1 flex items-center gap-1">
+                    <i data-lucide="git-commit" class="w-3 h-3"></i> V2 Implementation Path
+                </div>
+                <p class="text-[11px] text-slate-400 leading-normal">
+                    Next Phase Deployment: Fine-tuning local classification models and implementing interactive manual control overrides.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        let logsCount = 0;
+
+        const styles = {
+            0: { lbl: '0 - Secure Baseline', bg: 'bg-emerald-500/10', txt: 'text-emerald-400', bdr: 'border-emerald-500/20' },
+            1: { lbl: '1 - Low Deviation', bg: 'bg-teal-500/10', txt: 'text-teal-400', bdr: 'border-teal-500/20' },
+            2: { lbl: '2 - Outlier Info', bg: 'bg-blue-500/10', txt: 'text-blue-400', bdr: 'border-blue-500/20' },
+            3: { lbl: '3 - Warning Status', bg: 'bg-amber-500/10', txt: 'text-amber-400', bdr: 'border-amber-500/20' },
+            4: { lbl: '4 - High Security', bg: 'bg-orange-500/10', txt: 'text-orange-400', bdr: 'border-orange-500/20' },
+            5: { lbl: '5 - Critical Alert', bg: 'bg-red-500/20 pulse-critical', txt: 'text-red-400', bdr: 'border-red-500/50' }
+        };
+
+        const targetLoc = "ws://" + window.location.host + "/ws/alerts";
+        const ws = new WebSocket(window.location.host ? targetLoc : "ws://127.0.0.1:8000/ws/alerts");
+
+        ws.onmessage = (e) => {
+            document.getElementById('empty-state').classList.add('hidden');
+            const data = JSON.parse(e.data);
+            const p = data.event; // The NSL-KDD Log
+            const r = data.threat_rating; // 0-5
+            const ui = styles[r] || styles[0];
+
+            logsCount++;
+            document.getElementById('counter').innerText = `${logsCount} logs mapped`;
+
+            const row = document.createElement('tr');
+            row.className = "hover:bg-slate-900/40 cursor-pointer transition-colors group border-b border-slate-900";
+
+            // Inside ws.onmessage
+            row.onclick = () => {
+                document.getElementById('blank-panel').classList.add('hidden');
+                document.getElementById('active-panel').classList.remove('hidden');
+
+                const badge = document.getElementById('view-badge');
+                badge.innerText = ui.lbl.toUpperCase();
+                badge.className = `px-2 py-0.5 rounded text-xs font-mono font-bold border ${ui.bg} ${ui.txt} ${ui.bdr}`;
+
+                document.getElementById('view-action').innerText = `PROTOCOL: ${p.protocol_type.toUpperCase()}`;
+                document.getElementById('view-user').innerText = `Service: ${p.service}`;
+                document.getElementById('view-ip').innerText = `Actual Ground Truth: ${p.label}`; // This shows if the AI was right!
+                document.getElementById('view-metrics').innerText =
+                    `Src Bytes: ${p.src_bytes} // Dst Bytes: ${p.dst_bytes} // Connections: ${p.count}`;
+                document.getElementById('view-reason').innerText = data.ai_analysis;
+            };
+
+    row.innerHTML = `
+        <td class="p-4"><span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span></td>
+        <td class="p-4 font-mono text-xs">
+            <div class="text-slate-200 text-sm font-sans">${p.service.toUpperCase()}</div>
+            <div class="text-slate-500">${p.protocol_type} // ${p.flag}</div>
+        </td>
+        <td class="p-4 text-xs text-slate-300 font-mono font-semibold">${p.src_bytes} B</td>
+        <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i></td>
+    `;
+
+    const container = document.getElementById('stream-target');
+    container.insertBefore(row, container.firstChild);
+    lucide.createIcons();
+};
+
+            row.innerHTML = `
+                <td class="p-4"><span class="px-2 py-1 rounded border text-xs font-mono font-bold ${ui.bg} ${ui.txt} ${ui.bdr}">${ui.lbl}</span></td>
+                <td class="p-4 font-mono text-xs"><div class="text-slate-200 text-sm font-sans">${p.user_id}</div><div class="text-slate-500">${p.ip_address}</div></td>
+                <td class="p-4 text-xs text-slate-300 font-mono font-semibold">${p.action}</td>
+                <td class="p-4 text-right text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">Inspect <i data-lucide="chevron-right" class="w-3 h-3 inline ml-1"></i></td>
+            `;
+
+            const container = document.getElementById('stream-target');
+            container.insertBefore(row, container.firstChild);
+            lucide.createIcons();
+        };
+
+        ws.onclose = () => {
+            const indicator = document.getElementById('conn-status');
+            indicator.innerText = "STREAM OFFLINE";
+            indicator.className = "text-xs font-mono text-red-400";
+        };
+    </script>
+</body>
+</html>
